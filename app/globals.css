@@ -1,26 +1,114 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FEFEFE;
+  --foreground: #1E1E1E;
+  --primary: #7E9DD3;
+  --secondary: #6F3DD0;
+  --surface: #FEFEFE;
+  --ink: #1E1E1E;
+  --muted: #64748B;
+  --accent-1: #FDEFEC;
+  --accent-2: #EFEBFA;
+  --accent-3: #E4EBFB;
+  --accent-4: #E1F2EC;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-plus: var(--font-plus-jakarta-sans);
+  --font-roboto: var(--font-roboto);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
+  min-height: 100vh;
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-roboto), sans-serif;
+  font-weight: 300;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.9rem 1.5rem;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 150ms ease-in-out;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--secondary);
+  color: white;
+  box-shadow: 0 12px 24px rgba(111, 61, 208, 0.2);
+}
+
+.btn-primary:hover {
+  background: #582faa;
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--foreground);
+  border-color: #cbd5e1;
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary);
+  color: var(--secondary);
+}
+
+.btn-tertiary {
+  background: transparent;
+  color: var(--secondary);
+  padding-inline: 0;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.btn-tertiary:hover {
+  color: #4b2d96;
+  text-decoration: underline;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-plus-jakarta-sans), sans-serif;
+  letter-spacing: -0.02em;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+a {
+  transition: all 150ms ease-in-out;
+}
+
+::selection {
+  background: rgba(124, 58, 237, 0.16);
+  color: #311b92;
 }
