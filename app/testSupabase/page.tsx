@@ -1,5 +1,7 @@
 import { createClient } from "../../backend/lib/supabase/client";
 
+export const dynamic = "force-dynamic";
+
 export default async function TestSupabase() {
   const supabase = await createClient();
 

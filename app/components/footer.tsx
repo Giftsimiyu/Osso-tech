@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
 
 const footerLinks = [
@@ -14,11 +15,15 @@ export default function Footer() {
       <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:items-start">
         <div className="space-y-4 border-b border-slate-200 pb-6 lg:border-b-0 lg:border-r lg:pr-8 lg:pb-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#7E9DD3] to-[#6F3DD0] text-sm font-semibold text-white">
-              GS
-            </div>
+            <Image
+              src="/osso-logo.svg"
+              alt="Osso Tech logo"
+              width={80}
+              height={80}
+              className="h-16 w-16 shrink-0 object-contain sm:h-20 sm:w-20"
+            />
             <div>
-              <p className="text-lg font-semibold text-slate-900">Gadget Store</p>
+              <p className="text-lg font-semibold text-slate-900">Osso Tech</p>
               <p className="text-sm text-slate-500">Premium gear, delivered simply.</p>
             </div>
           </div>

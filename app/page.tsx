@@ -1,10 +1,142 @@
-'use client';
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { createClient } from "../backend/lib/supabase/server";
+import ProductCard from "./components/productCard";
+import HeroCarousel from "./components/heroCarousel";
 import SiteShell from "./components/site-shell";
 
-const heroSlides = [
+const categories = [
+  { title: "Phones", slug: "phones", subtitle: "Smart devices for every lifestyle", accent: "bg-[#E4EBFB]" },
+  { title: "Laptops", slug: "laptops", subtitle: "Performance meets portability", accent: "bg-[#FDEFEC]" },
+  { title: "Chargers", slug: "chargers", subtitle: "Power solutions that keep up", accent: "bg-[#EFEBFA]" },
+  { title: "Accessories", slug: "accessories", subtitle: "Essential gear and extras", accent: "bg-[#E1F2EC]" },
+];
+
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: products, error } = await supabase
+    .from("products")
+    .select(`
+      id,
+      name,
+      slug,
+      brand,
+      model,
+      image_url,
+      featured,
+      product_variants (
+        id,
+        sku,
+        variant_name,
+        price,
+        stock_quantity,
+        color
+      )
+    `)
+    .order("name");
+
+  if (error) {
+    console.error(error);
+
+    return (
+      <SiteShell>
+        <section className="rounded-[2rem] border border-rose-100 bg-[#FFF8F8] p-8 shadow-sm sm:p-12">
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-rose-500">Store update</p>
+          <h1 className="mt-3 text-3xl font-semibold text-slate-900">We couldn&apos;t load the store</h1>
+          <p className="mt-3 max-w-xl text-slate-600">Please try again in a moment. Our product collection is temporarily out of reach.</p>
+        </section>
+      </SiteShell>
+    );
+  }
+
+  const allProducts = products ?? [];
+  const featuredProducts = allProducts.filter((product) => product.featured);
+  const productSelection = (featuredProducts.length > 0 ? featuredProducts : allProducts).slice(0, 3);
+
+  return (
+    <SiteShell>
+      <section className="space-y-6">
+        <HeroCarousel products={(featuredProducts.length > 0 ? featuredProducts : allProducts).slice(0, 3)} />
+        <p className="text-sm font-medium text-slate-500">{allProducts.length} {allProducts.length === 1 ? "product" : "products"} available now</p>
+      </section>
+
+      <section id="shop" className="mt-16 space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.34em] text-[#6F3DD0]">Featured products</p>
+            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Curated picks for every setup</h2>
+          </div>
+          <Link href="/products" className="btn btn-primary">See more</Link>
+        </div>
+        {productSelection.length > 0 ? (
+          <div className="grid gap-6 lg:grid-cols-3">
+            {productSelection.map((product) => <ProductCard key={product.id} product={product} />)}
+          </div>
+        ) : (
+          <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-[#F8F9FF] px-6 py-16 text-center">
+            <h3 className="text-2xl font-semibold text-slate-900">No products yet</h3>
+            <p className="mt-2 text-slate-600">New gadgets will appear here as soon as they are added.</p>
+          </div>
+        )}
+      </section>
+
+      <section id="categories" className="mt-16 rounded-[2rem] bg-white p-8 shadow-sm shadow-slate-200">
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.34em] text-[#6F3DD0]">Categories</p>
+            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Shop by category</h2>
+          </div>
+          <Link href="/categories" className="btn btn-secondary">Explore all</Link>
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {categories.map((category) => (
+            <Link key={category.title} href={`/products?category=${category.slug}`} className="rounded-[1.75rem] border border-slate-200 p-6 transition hover:-translate-y-1 hover:shadow-lg">
+              <div className={`inline-flex rounded-3xl px-3 py-2 text-sm font-semibold ${category.accent}`}>{category.title}</div>
+              <p className="mt-5 text-lg font-semibold text-slate-900">{category.title}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{category.subtitle}</p>
+              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#6F3DD0]">Shop now <span aria-hidden="true">-&gt;</span></span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-16 space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.34em] text-[#6F3DD0]">Why choose us</p>
+            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Everything you need to buy with confidence</h2>
+          </div>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-3">
+          {[
+            {
+              title: "Fast fulfilment",
+              description: "Orders are handled quickly, with smooth shipping updates from the moment your cart is confirmed.",
+              accent: "bg-[#E4EBFB]",
+            },
+            {
+              title: "Secure checkout",
+              description: "Your payment and delivery details are protected with a clean, guided checkout flow built around trust.",
+              accent: "bg-[#EFEBFA]",
+            },
+            {
+              title: "Expertly curated gear",
+              description: "Every product is selected to help customers upgrade their setup without the guesswork.",
+              accent: "bg-[#E1F2EC]",
+            },
+          ].map((item) => (
+            <div key={item.title} className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className={`inline-flex rounded-2xl px-3 py-2 text-sm font-semibold ${item.accent}`}>{item.title}</div>
+              <p className="mt-5 text-sm leading-7 text-slate-600">{item.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </SiteShell>
+  );
+}
+
+{/*const heroSlides = [
   {
     title: "Meet the newest release",
     subtitle: "Nexora Phone 15",
@@ -186,4 +318,4 @@ export default function Home() {
       </section>
     </SiteShell>
   );
-}
+}*/}

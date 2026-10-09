@@ -1,20 +1,25 @@
 'use client';
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FiSearch, FiShoppingCart } from "react-icons/fi";
+import { FiMenu, FiSearch, FiShoppingCart, FiX } from "react-icons/fi";
+import { useCart } from "./cartProvider";
 
 const links = [
   { href: "/", label: "Home" },
   { href: "/products", label: "Products" },
+  { href: "/categories", label: "Categories" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { totalItems } = useCart();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isSearchOpen) return;
@@ -22,6 +27,7 @@ export default function Navbar() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsSearchOpen(false);
+        setIsMenuOpen(false);
       }
     };
 
@@ -30,15 +36,23 @@ export default function Navbar() {
   }, [isSearchOpen]);
 
   return (
-    <div className="relative w-full rounded-full border border-slate-200 bg-white/90 px-4 py-3 shadow-sm">
+    <div className="relative w-full rounded-[1.25rem] border border-slate-200 bg-white/90 px-3 py-2 shadow-sm sm:rounded-full sm:px-4 sm:py-3">
       <div className="flex items-center justify-between gap-3">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#7E9DD3] to-[#6F3DD0] text-sm font-semibold text-white">
-            GS
-          </div>
+        <Link href="/" className="flex min-w-0 items-center gap-1" onClick={() => setIsMenuOpen(false)}>
+          <span className="relative h-14 w-16 shrink-0 sm:h-20 sm:w-28">
+            <span className="absolute left-0 top-1/2 h-14 w-14 -translate-y-1/2 rounded-full bg-gradient-to-br from-slate-100 via-white to-[#eee8fb] shadow-sm ring-1 ring-slate-200/70 sm:h-20 sm:w-20" />
+            <Image
+              src="/osso-logo.svg"
+              alt="Osso Tech logo"
+              width={100}
+              height={100}
+              className="absolute left-0 top-1/2 h-14 w-14 -translate-y-1/2 object-contain sm:h-20 sm:w-20"
+              priority
+            />
+          </span>
           <div>
-            <p className="text-base font-semibold text-slate-900">Gadget Store</p>
-            <p className="text-xs text-slate-500">Premium tech</p>
+            <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">Osso Tech</p>
+            <p className="hidden text-xs text-slate-500 sm:block">Premium tech for a smooth experience</p>
           </div>
         </Link>
 
@@ -57,37 +71,78 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            aria-label="Open search"
+            aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isMenuOpen}
+            onClick={() => setIsMenuOpen((open) => !open)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-[#7E9DD3] hover:text-[#6F3DD0] md:hidden"
+          >
+            {isMenuOpen ? <FiX size={18} /> : <FiMenu size={18} />}
+          </button>
+          <button
+            type="button"
+            aria-label={isSearchOpen ? "Close search" : "Open search"}
+            aria-expanded={isSearchOpen}
             onClick={() => setIsSearchOpen((open) => !open)}
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-[#7E9DD3] hover:text-[#6F3DD0]"
           >
-            <FiSearch size={18} />
+            {isSearchOpen ? <FiX size={18} /> : <FiSearch size={18} />}
           </button>
 
           <Link
             href="/cart"
-            aria-label="View cart"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-[#7E9DD3] hover:text-[#6F3DD0]"
+            aria-label={`View cart${totalItems > 0 ? `, ${totalItems} ${totalItems === 1 ? "item" : "items"}` : ""}`}
+            className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-[#7E9DD3] hover:text-[#6F3DD0]"
           >
             <FiShoppingCart size={18} />
+            {totalItems > 0 && (
+              <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#6F3DD0] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+                {totalItems > 99 ? "99+" : totalItems}
+              </span>
+            )}
           </Link>
         </div>
       </div>
 
+      {isMenuOpen && (
+        <nav className="mt-3 grid gap-1 border-t border-slate-100 pt-3 md:hidden">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setIsMenuOpen(false)}
+              className={`rounded-xl px-4 py-3 text-sm font-semibold ${pathname === link.href ? "bg-[#EFEBFA] text-[#6F3DD0]" : "text-slate-700 hover:bg-slate-50"}`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+      )}
+
       {isSearchOpen && (
-        <div className="absolute right-3 top-full mt-3 w-[min(92vw,24rem)] overflow-hidden rounded-2xl bg-gradient-to-r from-[#7E9DD3] via-[#6F3DD0] to-[#1E1E1E] p-[1px] shadow-xl">
-          <div className="flex items-center gap-3 rounded-[15px] bg-white/95 px-4 py-3 backdrop-blur">
-            <FiSearch className="text-slate-500" size={18} />
+        <div className="absolute inset-0 z-10 flex items-center overflow-hidden rounded-full bg-gradient-to-r from-[#7E9DD3]/95 via-[#6F3DD0]/90 to-[#1E1E1E]/90 p-3 shadow-xl backdrop-blur-md">
+          <form action="/products" method="get" className="flex w-full items-center gap-3 rounded-full bg-white/90 px-4 py-2 backdrop-blur">
+            <FiSearch className="shrink-0 text-slate-500" size={18} />
             <input
               autoFocus
               type="text"
+              name="search"
               placeholder="Search gadgets"
-              className="w-full border-none bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+              aria-label="Search gadgets"
+              required
+              className="min-w-0 flex-1 border-none bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
             />
-          </div>
+            <button
+              type="button"
+              aria-label="Close search"
+              onClick={() => setIsSearchOpen(false)}
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-200/70 hover:text-slate-900"
+            >
+              <FiX size={18} />
+            </button>
+          </form>
         </div>
       )}
     </div>
