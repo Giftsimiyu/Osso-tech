@@ -8,8 +8,8 @@ export default function SiteShell({
   className?: string;
 }) {
   return (
-    <div className={`min-h-screen bg-[#FEFEFE] text-[#1E1E1E] ${className}`}>
-      <main className="mx-auto w-full max-w-7xl px-3 py-6 sm:px-5 sm:py-10">{children}</main>
+    <div className={`flex min-h-screen flex-col bg-[#FAF9F7] text-[#17151D] ${className}`}>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-9 lg:px-8 lg:py-12">{children}</main>
 
       <Footer />
     </div>

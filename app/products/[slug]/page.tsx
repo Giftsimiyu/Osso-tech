@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "../../../backend/lib/supabase/server";
 import ProductDetail from "../../components/productDetail";
+import ProductReviews from "../../components/productReviews";
 import SiteShell from "../../components/site-shell";
 
 type Props = {
@@ -29,7 +30,6 @@ export default async function ProductPage({ params }: Props) {
 				sku,
 				variant_name,
 				price,
-				stock_quantity,
 				condition,
 				warranty,
 				color,
@@ -46,7 +46,10 @@ export default async function ProductPage({ params }: Props) {
 
 	return (
 		<SiteShell>
-			<ProductDetail product={product} />
+			<div className="space-y-8">
+				<ProductDetail product={product} />
+				<ProductReviews productId={product.id} />
+			</div>
 		</SiteShell>
 	);
 }

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "../backend/lib/supabase/server";
 import ProductCard from "./components/productCard";
 import HeroCarousel from "./components/heroCarousel";
+import MotionReveal from "./components/motion-reveal";
+import MotionTicker from "./components/motion-ticker";
 import SiteShell from "./components/site-shell";
 
 const categories = [
@@ -28,7 +30,6 @@ export default async function Home() {
         sku,
         variant_name,
         price,
-        stock_quantity,
         color
       )
     `)
@@ -54,22 +55,36 @@ export default async function Home() {
 
   return (
     <SiteShell>
-      <section className="space-y-6">
+      <section className="space-y-5">
         <HeroCarousel products={(featuredProducts.length > 0 ? featuredProducts : allProducts).slice(0, 3)} />
-        <p className="text-sm font-medium text-slate-500">{allProducts.length} {allProducts.length === 1 ? "product" : "products"} available now</p>
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1 text-sm">
+          <p className="font-semibold text-slate-700">
+            {allProducts.length} {allProducts.length === 1 ? "product" : "products"} ready to explore
+          </p>
+          <p className="text-slate-500">A considered collection for work, home, and everywhere in between.</p>
+        </div>
+        <MotionTicker />
       </section>
 
-      <section id="shop" className="mt-16 space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.34em] text-[#6F3DD0]">Featured products</p>
-            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Curated picks for every setup</h2>
+      <section id="shop" className="mt-14 space-y-6 sm:mt-20">
+        <MotionReveal>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#6F3DD0] sm:text-sm sm:tracking-[0.3em]">Featured products</p>
+              <span aria-hidden="true" className="motion-section-rule mt-2 block h-1 rounded-full bg-gradient-to-r from-[#6F3DD0] to-[#7E9DD3]" />
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Good tech, chosen well.</h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">A few standout picks from our collection, selected to make everyday life a little easier.</p>
+            </div>
+            <Link href="/products" className="btn btn-secondary w-full sm:w-auto">View all products</Link>
           </div>
-          <Link href="/products" className="btn btn-primary">See more</Link>
-        </div>
+        </MotionReveal>
         {productSelection.length > 0 ? (
-          <div className="grid gap-6 lg:grid-cols-3">
-            {productSelection.map((product) => <ProductCard key={product.id} product={product} />)}
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
+            {productSelection.map((product, index) => (
+              <MotionReveal key={product.id} delayMs={index * 90}>
+                <ProductCard product={product} />
+              </MotionReveal>
+            ))}
           </div>
         ) : (
           <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-[#F8F9FF] px-6 py-16 text-center">
@@ -79,35 +94,50 @@ export default async function Home() {
         )}
       </section>
 
-      <section id="categories" className="mt-16 rounded-[2rem] bg-white p-8 shadow-sm shadow-slate-200">
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.34em] text-[#6F3DD0]">Categories</p>
-            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Shop by category</h2>
+      <section id="categories" className="mt-14 rounded-[1.75rem] border border-slate-200/80 bg-white p-5 shadow-sm sm:mt-20 sm:rounded-[2rem] sm:p-8">
+        <MotionReveal>
+          <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#6F3DD0] sm:text-sm sm:tracking-[0.3em]">Find your fit</p>
+              <span aria-hidden="true" className="motion-section-rule mt-2 block h-1 rounded-full bg-gradient-to-r from-[#6F3DD0] to-[#7E9DD3]" />
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Shop by category</h2>
+            </div>
+            <Link href="/categories" className="btn btn-secondary w-full sm:w-auto">Explore all categories</Link>
           </div>
-          <Link href="/categories" className="btn btn-secondary">Explore all</Link>
-        </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {categories.map((category) => (
-            <Link key={category.title} href={`/products?category=${category.slug}`} className="rounded-[1.75rem] border border-slate-200 p-6 transition hover:-translate-y-1 hover:shadow-lg">
-              <div className={`inline-flex rounded-3xl px-3 py-2 text-sm font-semibold ${category.accent}`}>{category.title}</div>
-              <p className="mt-5 text-lg font-semibold text-slate-900">{category.title}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{category.subtitle}</p>
-              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#6F3DD0]">Shop now <span aria-hidden="true">-&gt;</span></span>
-            </Link>
+        </MotionReveal>
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+          {categories.map((category, index) => (
+            <MotionReveal key={category.title} delayMs={index * 70}>
+              <Link href={`/products?category=${category.slug}`} className="motion-card group block h-full rounded-2xl border border-slate-200/80 p-4 hover:-translate-y-1 hover:border-[#C9B9ED] hover:shadow-lg hover:shadow-[#6F3DD0]/5 sm:rounded-[1.5rem] sm:p-5">
+                <div
+                  className={`motion-category-icon relative inline-flex rounded-2xl px-3 py-2 text-sm font-semibold ${category.accent}`}
+                  style={{ animationDelay: `${index * -0.8}s` }}
+                >
+                  <span aria-hidden="true" className="motion-orbit absolute -right-1 -top-1 h-3 w-3 rounded-full border border-[#6F3DD0]/60">
+                    <span className="motion-orbit-dot absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-[#6F3DD0]" />
+                  </span>
+                  0{index + 1}
+                </div>
+                <p className="mt-4 text-lg font-semibold text-slate-900">{category.title}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{category.subtitle}</p>
+                <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#6F3DD0]">Shop now <span aria-hidden="true" className="transition group-hover:translate-x-1">-&gt;</span></span>
+              </Link>
+            </MotionReveal>
           ))}
         </div>
       </section>
 
-      <section className="mt-16 space-y-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.34em] text-[#6F3DD0]">Why choose us</p>
-            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Everything you need to buy with confidence</h2>
+      <section className="mt-14 space-y-6 sm:mt-20">
+        <MotionReveal>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#6F3DD0] sm:text-sm sm:tracking-[0.3em]">Shopping, made simpler</p>
+              <h2 className="mt-2 max-w-2xl text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">The details matter. So does your experience.</h2>
+            </div>
           </div>
-        </div>
+        </MotionReveal>
 
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {[
             {
               title: "Fast fulfilment",
@@ -124,11 +154,16 @@ export default async function Home() {
               description: "Every product is selected to help customers upgrade their setup without the guesswork.",
               accent: "bg-[#E1F2EC]",
             },
-          ].map((item) => (
-            <div key={item.title} className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className={`inline-flex rounded-2xl px-3 py-2 text-sm font-semibold ${item.accent}`}>{item.title}</div>
-              <p className="mt-5 text-sm leading-7 text-slate-600">{item.description}</p>
-            </div>
+          ].map((item, index) => (
+            <MotionReveal key={item.title} delayMs={index * 90}>
+              <div className="motion-card h-full rounded-[1.5rem] border border-slate-200/80 bg-white p-5 shadow-sm hover:-translate-y-1 hover:border-[#C9B9ED] hover:shadow-lg hover:shadow-[#6F3DD0]/5 sm:p-6">
+                <div className={`motion-card-accent inline-flex rounded-2xl px-3 py-2 text-sm font-semibold ${item.accent}`}>
+                  <span aria-hidden="true" className="motion-orbit-dot mr-2 inline-block h-2 w-2 self-center rounded-full bg-[#6F3DD0]" />
+                  {item.title}
+                </div>
+                <p className="mt-4 text-sm leading-7 text-slate-600">{item.description}</p>
+              </div>
+            </MotionReveal>
           ))}
         </div>
       </section>

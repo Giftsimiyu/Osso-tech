@@ -1,12 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
-import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
+import { ArrowRight } from "lucide-react";
 
 const footerLinks = [
   { href: "/", label: "Home" },
   { href: "/products", label: "Products" },
+  { href: "/categories", label: "Categories" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
+
 ];
 
 export default function Footer() {
@@ -44,18 +46,13 @@ export default function Footer() {
         </div>
 
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#6F3DD0]">Follow us</p>
-          <div className="mt-4 flex items-center gap-3">
-            <a href="#" className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:border-[#7E9DD3] hover:text-[#6F3DD0]">
-              <FaFacebookF size={16} />
-            </a>
-            <a href="#" className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:border-[#7E9DD3] hover:text-[#6F3DD0]">
-              <FaTwitter size={16} />
-            </a>
-            <a href="#" className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:border-[#7E9DD3] hover:text-[#6F3DD0]">
-              <FaInstagram size={16} />
-            </a>
-          </div>
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#6F3DD0]">Need a hand?</p>
+          <p className="mt-4 max-w-xs text-sm leading-6 text-slate-600">
+            We&apos;re here to help you find the right gear for your setup.
+          </p>
+          <Link href="/contact" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-900 transition hover:text-[#6F3DD0]">
+            Talk to our team <ArrowRight size={16} aria-hidden="true" />
+          </Link>
         </div>
       </div>
     </footer>

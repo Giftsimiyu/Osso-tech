@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FiCheck, FiChevronDown, FiSearch, FiSliders } from "react-icons/fi";
+import { FiChevronDown, FiSearch, FiSliders } from "react-icons/fi";
+import MotionReveal from "../components/motion-reveal";
 import ProductCard from "../components/productCard";
 
 type ProductVariant = {
@@ -9,7 +10,6 @@ type ProductVariant = {
   sku: string;
   variant_name: string;
   price: number;
-  stock_quantity: number;
   color: string | null;
 };
 
@@ -41,7 +41,6 @@ export default function ProductsBrowser({ products, categories, initialCategory 
   const [query, setQuery] = useState(initialQuery);
   const [brand, setBrand] = useState("All brands");
   const [category, setCategory] = useState(initialCategory);
-  const [stockOnly, setStockOnly] = useState(false);
   const [sort, setSort] = useState("featured");
   const [visibleCount, setVisibleCount] = useState(12);
 
@@ -58,11 +57,7 @@ export default function ProductsBrowser({ products, categories, initialCategory 
           .includes(normalizedQuery);
       const matchesBrand = brand === "All brands" || product.brand === brand;
       const matchesCategory = !category || product.category_id === category;
-      const matchesStock =
-        !stockOnly ||
-        product.product_variants.some((variant) => variant.stock_quantity > 0);
-
-      return matchesQuery && matchesBrand && matchesCategory && matchesStock;
+      return matchesQuery && matchesBrand && matchesCategory;
     })
     .sort((first, second) => {
       if (sort === "name") return first.name.localeCompare(second.name);
@@ -130,14 +125,6 @@ export default function ProductsBrowser({ products, categories, initialCategory 
           </select>
         </label>
 
-        <label className="flex cursor-pointer items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700">
-          <input type="checkbox" checked={stockOnly} onChange={(event) => { setStockOnly(event.target.checked); setVisibleCount(12); }} className="sr-only" />
-          <span className={`flex h-5 w-5 items-center justify-center rounded-full border ${stockOnly ? "border-[#6F3DD0] bg-[#6F3DD0] text-white" : "border-slate-300 bg-white"}`}>
-            {stockOnly && <FiCheck size={13} aria-hidden="true" />}
-          </span>
-          In stock only
-        </label>
-
         <label className="flex items-center justify-between gap-2 text-sm text-slate-600 sm:ml-auto sm:justify-start">
           <span>Sort by</span>
           <select value={sort} onChange={(event) => { setSort(event.target.value); setVisibleCount(12); }} className="min-w-0 rounded-full border border-slate-200 bg-white px-3 py-3 font-semibold text-slate-700 outline-none focus:border-[#6F3DD0] sm:px-4">
@@ -151,7 +138,11 @@ export default function ProductsBrowser({ products, categories, initialCategory 
 
       {filteredProducts.length > 0 ? (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {visibleProducts.map((product) => <ProductCard key={product.id} product={product} />)}
+          {visibleProducts.map((product, index) => (
+            <MotionReveal key={product.id} delayMs={(index % 4) * 55}>
+              <ProductCard product={product} />
+            </MotionReveal>
+          ))}
         </div>
       ) : (
         <div className="mt-8 rounded-[1.75rem] border border-dashed border-slate-300 bg-[#F8F9FF] px-6 py-20 text-center">

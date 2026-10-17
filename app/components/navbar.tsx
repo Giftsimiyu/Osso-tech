@@ -19,51 +19,50 @@ export default function Navbar() {
   const pathname = usePathname();
   const { totalItems } = useCart();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuPath, setMenuPath] = useState<string | null>(null);
+  const isMenuOpen = menuPath === pathname;
 
   useEffect(() => {
-    if (!isSearchOpen) return;
-
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && (isSearchOpen || isMenuOpen)) {
         setIsSearchOpen(false);
-        setIsMenuOpen(false);
+        setMenuPath(null);
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isSearchOpen]);
+  }, [isMenuOpen, isSearchOpen]);
 
   return (
-    <div className="relative w-full rounded-[1.25rem] border border-slate-200 bg-white/90 px-3 py-2 shadow-sm sm:rounded-full sm:px-4 sm:py-3">
-      <div className="flex items-center justify-between gap-3">
-        <Link href="/" className="flex min-w-0 items-center gap-1" onClick={() => setIsMenuOpen(false)}>
-          <span className="relative h-14 w-16 shrink-0 sm:h-20 sm:w-28">
-            <span className="absolute left-0 top-1/2 h-14 w-14 -translate-y-1/2 rounded-full bg-gradient-to-br from-slate-100 via-white to-[#eee8fb] shadow-sm ring-1 ring-slate-200/70 sm:h-20 sm:w-20" />
+    <div className="relative w-full">
+      <div className="flex min-h-12 items-center justify-between gap-3">
+        <Link href="/" className="flex min-w-0 items-center gap-1" onClick={() => setMenuPath(null)}>
+          <span className="relative h-12 w-12 shrink-0 sm:h-14 sm:w-14">
             <Image
               src="/osso-logo.svg"
               alt="Osso Tech logo"
               width={100}
               height={100}
-              className="absolute left-0 top-1/2 h-14 w-14 -translate-y-1/2 object-contain sm:h-20 sm:w-20"
+              className="h-full w-full object-contain"
               priority
             />
           </span>
           <div>
-            <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">Osso Tech</p>
-            <p className="hidden text-xs text-slate-500 sm:block">Premium tech for a smooth experience</p>
+            <p className="truncate text-base font-bold tracking-tight text-slate-950 sm:text-lg">Osso Tech</p>
+            <p className="hidden text-[11px] font-medium tracking-wide text-slate-500 sm:block">TECH, CHOSEN WELL</p>
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex gap-8">
+        <nav aria-label="Main navigation" className="hidden items-center gap-7 lg:flex">
           {links.map((link) => {
-            const active = pathname === link.href;
+            const active = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`btn btn-tertiary ${active ? "text-[#6F3DD0]" : "text-slate-700"}`}
+                aria-current={active ? "page" : undefined}
+                className={`relative py-2 text-sm font-semibold transition-colors hover:text-[#6F3DD0] ${active ? "text-[#6F3DD0] after:absolute after:inset-x-0 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#6F3DD0]" : "text-slate-600"}`}
               >
                 {link.label}
               </Link>
@@ -76,8 +75,11 @@ export default function Navbar() {
             type="button"
             aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={isMenuOpen}
-            onClick={() => setIsMenuOpen((open) => !open)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-[#7E9DD3] hover:text-[#6F3DD0] md:hidden"
+            onClick={() => {
+              setMenuPath(isMenuOpen ? null : pathname);
+              setIsSearchOpen(false);
+            }}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-[#7E9DD3] hover:text-[#6F3DD0] lg:hidden"
           >
             {isMenuOpen ? <FiX size={18} /> : <FiMenu size={18} />}
           </button>
@@ -85,7 +87,10 @@ export default function Navbar() {
             type="button"
             aria-label={isSearchOpen ? "Close search" : "Open search"}
             aria-expanded={isSearchOpen}
-            onClick={() => setIsSearchOpen((open) => !open)}
+            onClick={() => {
+              setIsSearchOpen((open) => !open);
+              setMenuPath(null);
+            }}
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-[#7E9DD3] hover:text-[#6F3DD0]"
           >
             {isSearchOpen ? <FiX size={18} /> : <FiSearch size={18} />}
@@ -107,12 +112,13 @@ export default function Navbar() {
       </div>
 
       {isMenuOpen && (
-        <nav className="mt-3 grid gap-1 border-t border-slate-100 pt-3 md:hidden">
+        <nav aria-label="Mobile navigation" className="mt-3 grid gap-1 border-t border-slate-100 pt-3 lg:hidden">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              onClick={() => setIsMenuOpen(false)}
+              onClick={() => setMenuPath(null)}
+              aria-current={pathname === link.href ? "page" : undefined}
               className={`rounded-xl px-4 py-3 text-sm font-semibold ${pathname === link.href ? "bg-[#EFEBFA] text-[#6F3DD0]" : "text-slate-700 hover:bg-slate-50"}`}
             >
               {link.label}
@@ -122,8 +128,8 @@ export default function Navbar() {
       )}
 
       {isSearchOpen && (
-        <div className="absolute inset-0 z-10 flex items-center overflow-hidden rounded-full bg-gradient-to-r from-[#7E9DD3]/95 via-[#6F3DD0]/90 to-[#1E1E1E]/90 p-3 shadow-xl backdrop-blur-md">
-          <form action="/products" method="get" className="flex w-full items-center gap-3 rounded-full bg-white/90 px-4 py-2 backdrop-blur">
+        <div className="absolute inset-x-0 top-0 z-10 flex min-h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-xl sm:rounded-full sm:p-2.5">
+          <form action="/products" method="get" className="flex w-full items-center gap-3 rounded-full bg-slate-50 px-4 py-2">
             <FiSearch className="shrink-0 text-slate-500" size={18} />
             <input
               autoFocus

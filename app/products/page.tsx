@@ -10,7 +10,10 @@ export default async function ProductsPage({
   const supabase = await createClient();
   const { category: categorySlug, search } = await searchParams;
 
-  const [{ data: products, error }, { data: categories }] = await Promise.all([
+  const [
+    { data: products, error },
+    { data: categories, error: categoriesError },
+  ] = await Promise.all([
     supabase.from("products").select(`
       id,
       name,
@@ -24,15 +27,14 @@ export default async function ProductsPage({
         sku,
         variant_name,
         price,
-        stock_quantity,
         color
       )
     `).order("name"),
     supabase.from("categories").select("id, name, slug").order("name"),
   ]);
 
-  if (error) {
-    console.error(error);
+  if (error || categoriesError) {
+    console.error("Product catalog lookup error:", error ?? categoriesError);
 
     return (
       <SiteShell>

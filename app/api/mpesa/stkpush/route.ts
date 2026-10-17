@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "../../../../backend/lib/supabase/admin";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function getTimestamp() {
   const now = new Date();
@@ -35,19 +33,33 @@ function normalizePhone(phone: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, message: "Enter a valid order ID." },
+        { status: 400 }
+      );
+    }
+    const values =
+      body && typeof body === "object" && !Array.isArray(body)
+        ? (body as Record<string, unknown>)
+        : null;
+    const requestedOrderId = values?.orderId;
+    const orderId =
+      typeof requestedOrderId === "string" ? requestedOrderId : "";
 
-    const { orderId } = body;
-
-    if (!orderId) {
+    if (!UUID_PATTERN.test(orderId)) {
       return NextResponse.json(
         {
           success: false,
-          message: "Order ID is required.",
+          message: "A valid order ID is required.",
         },
         { status: 400 }
       );
     }
+    const supabase = createAdminClient();
 
     // --------------------------------------------------
     // 1. Get the order from Supabase
@@ -59,7 +71,8 @@ export async function POST(request: NextRequest) {
         id,
         phone,
         total_amount,
-        payment_status
+        payment_status,
+        checkout_request_id
       `)
       .eq("id", orderId)
       .single();
@@ -76,11 +89,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (
+      !Number.isSafeInteger(Number(order.total_amount)) ||
+      Number(order.total_amount) <= 0
+    ) {
+      console.error(`Invalid M-Pesa order total for order ${orderId}.`);
+      return NextResponse.json(
+        { success: false, message: "The order total is invalid." },
+        { status: 400 }
+      );
+    }
+
     // --------------------------------------------------
     // 2. Make sure the order hasn't already been paid
     // --------------------------------------------------
 
-    if (order.payment_status === "Completed") {
+    const paymentStatus = String(order.payment_status).toLowerCase();
+    if (paymentStatus === "paid" || paymentStatus === "completed") {
       return NextResponse.json(
         {
           success: false,
@@ -89,6 +114,63 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    if (paymentStatus === "pay on delivery") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "This order is set to be paid on delivery.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      paymentStatus === "pending" &&
+      order.checkout_request_id
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "A payment request is already active for this order.",
+        },
+        { status: 409 }
+      );
+    }
+
+    const callbackToken = process.env.MPESA_CALLBACK_TOKEN;
+    const configuredCallbackUrl = process.env.MPESA_CALLBACK_URL;
+    if (!callbackToken || !configuredCallbackUrl) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "M-Pesa callback security is not configured. Set MPESA_CALLBACK_URL and MPESA_CALLBACK_TOKEN.",
+        },
+        { status: 500 }
+      );
+    }
+
+    let callbackUrl: URL;
+    try {
+      callbackUrl = new URL(configuredCallbackUrl);
+    } catch {
+      return NextResponse.json(
+        { success: false, message: "M-Pesa callback URL is invalid." },
+        { status: 500 }
+      );
+    }
+    if (
+      callbackUrl.protocol !== "https:" ||
+      callbackUrl.username ||
+      callbackUrl.password
+    ) {
+      return NextResponse.json(
+        { success: false, message: "M-Pesa callback URL must use HTTPS." },
+        { status: 500 }
+      );
+    }
+    callbackUrl.searchParams.set("token", callbackToken);
 
     // --------------------------------------------------
     // 3. Get M-Pesa credentials
@@ -141,12 +223,13 @@ export async function POST(request: NextRequest) {
     ).toString("base64");
 
     const authResponse = await fetch(
-      "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+  "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
       {
         method: "GET",
         headers: {
           Authorization: `Basic ${credentials}`,
         },
+        signal: AbortSignal.timeout(15_000),
       }
     );
 
@@ -178,22 +261,19 @@ export async function POST(request: NextRequest) {
     // 7. Callback URL
     // --------------------------------------------------
 
-    const callbackUrl =
-      process.env.MPESA_CALLBACK_URL ||
-      "https://your-domain.com/api/mpesa/callback";
-
     // --------------------------------------------------
     // 8. Send STK Push
     // --------------------------------------------------
 
     const stkResponse = await fetch(
-      "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+  "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${authData.access_token}`,
           "Content-Type": "application/json",
         },
+        signal: AbortSignal.timeout(15_000),
         body: JSON.stringify({
           BusinessShortCode: Number(shortcode),
           Password: password,
@@ -203,7 +283,7 @@ export async function POST(request: NextRequest) {
           PartyA: customerPhone,
           PartyB: Number(partyB),
           PhoneNumber: customerPhone,
-          CallBackURL: callbackUrl,
+          CallBackURL: callbackUrl.toString(),
 
           // Maximum 12 characters
           AccountReference: `ORD${String(orderId).slice(0, 9)}`,
@@ -240,6 +320,8 @@ export async function POST(request: NextRequest) {
       .update({
         merchant_request_id: stkData.MerchantRequestID,
         checkout_request_id: stkData.CheckoutRequestID,
+        status: "Pending",
+        payment_status: "Pending",
         updated_at: new Date().toISOString(),
       })
       .eq("id", orderId);

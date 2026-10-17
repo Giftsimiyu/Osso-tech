@@ -12,7 +12,6 @@ type Variant = {
   sku: string;
   variant_name: string;
   price: number;
-  stock_quantity: number;
   condition: string | null;
   warranty: string | null;
   color: string | null;
@@ -36,7 +35,7 @@ export default function ProductDetail({ product }: { product: Product }) {
   const variants = product.product_variants ?? [];
   const { addItem } = useCart();
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(
-    variants[0] ?? null,
+    () => variants[0] ?? null,
   );
 
   if (!selectedVariant) {
@@ -46,13 +45,11 @@ export default function ProductDetail({ product }: { product: Product }) {
           Product details
         </p>
         <h1 className="mt-3 text-3xl font-semibold text-slate-900">{product.name}</h1>
-        <p className="mt-3 text-slate-600">This product currently has no available variants.</p>
+        <p className="mt-3 text-slate-600">This product has no variants configured.</p>
       </section>
     );
   }
-
   const image = getProductImageUrl(selectedVariant.image_url || product.image_url);
-  const inStock = selectedVariant.stock_quantity > 0;
 
   return (
     <article className="space-y-10">
@@ -98,10 +95,6 @@ export default function ProductDetail({ product }: { product: Product }) {
 
           <div className="mt-8 border-t border-slate-100 pt-6">
             <p className="text-3xl font-semibold text-slate-900">KSh {selectedVariant.price.toLocaleString()}</p>
-            <p className={`mt-3 flex items-center gap-2 text-sm font-medium ${inStock ? "text-emerald-600" : "text-rose-500"}`}>
-              <span className={`h-2.5 w-2.5 rounded-full ${inStock ? "bg-emerald-500" : "bg-rose-400"}`} />
-              {inStock ? `${selectedVariant.stock_quantity} available` : "Out of stock"}
-            </p>
           </div>
 
           {variants.length > 1 && (
@@ -146,11 +139,10 @@ export default function ProductDetail({ product }: { product: Product }) {
                 sku: selectedVariant.sku,
               });
             }}
-            disabled={!inStock}
             className="btn btn-primary mt-8 w-full disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
           >
             <FiShoppingCart size={20} aria-hidden="true" />
-            {inStock ? "Add to cart" : "Out of stock"}
+            Add to cart
           </button>
         </div>
       </section>
